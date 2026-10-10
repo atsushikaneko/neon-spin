@@ -1,0 +1,361 @@
+<!doctype html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; base-uri 'none'; form-action 'none'">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neon Spin</title>
+<style>
+:root{
+  --bg:#14122b;--panel:#1d1a40;--panel2:#26225a;--text:#f4f1ff;--muted:#b5afe0;
+  --pink:#ff3df2;--cyan:#3dfff0;--lime:#b6ff3d;--yellow:#ffe83d;--violet:#7a5cff;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{
+  min-height:100vh;color:var(--text);
+  font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;
+  background:radial-gradient(900px 500px at 50% -10%,#2b2570 0%,transparent 60%),radial-gradient(600px 400px at 100% 100%,#3a1459 0%,transparent 60%),var(--bg);
+  background-attachment:fixed;
+}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--cyan);outline-offset:3px;border-radius:10px}
+.app{max-width:760px;margin:0 auto;padding:14px 16px 40px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0 12px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{width:38px;height:38px;flex:none;filter:drop-shadow(0 0 8px var(--pink))}
+h1{margin:0;font-size:26px;line-height:1;color:var(--cyan);text-shadow:0 0 14px var(--cyan);letter-spacing:.5px}
+.tag{margin:3px 0 0;font-size:12px;color:#ff9bf7}
+.lang{border:1px solid var(--violet);background:var(--panel);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:700;color:var(--muted);flex:none}
+.lang b{color:#14122b;background:var(--cyan);border-radius:999px;padding:2px 8px;box-shadow:0 0 10px var(--cyan)}
+.lang span{padding:2px 4px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--panel);padding:6px;border-radius:999px;border:1px solid #3a3480}
+.tab{border:0;background:transparent;border-radius:999px;padding:10px;font-weight:700;color:var(--muted)}
+.tab[aria-selected="true"]{background:var(--pink);color:#14122b;box-shadow:0 0 18px var(--pink)}
+section[hidden]{display:none}
+.stage{display:flex;flex-direction:column;align-items:center;gap:18px;padding:22px 0 6px}
+.wheel-wrap{position:relative;width:min(88vw,380px);aspect-ratio:1}
+.wheel-btn{display:block;width:100%;height:100%;border:0;background:none;padding:0;border-radius:50%;filter:drop-shadow(0 0 18px rgba(255,61,242,.55))}
+.wheel-btn:disabled{cursor:wait}
+#wheel{width:100%;height:100%;transform:rotate(0deg);transition:transform 4.2s cubic-bezier(.12,.62,.08,1)}
+.pointer{position:absolute;left:50%;top:-8px;transform:translateX(-50%);width:34px;height:40px;z-index:2;filter:drop-shadow(0 0 8px #fff)}
+.hub{position:absolute;left:50%;top:50%;width:22%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;background:var(--bg);border:3px solid var(--cyan);box-shadow:0 0 16px var(--cyan),inset 0 0 12px rgba(61,255,240,.4);display:grid;place-items:center;font-weight:900;color:var(--cyan);font-size:clamp(11px,3.2vw,15px);pointer-events:none;letter-spacing:.5px}
+.bulb{animation:blink 1.4s infinite}
+.bulb:nth-child(even){animation-delay:.7s}
+@keyframes blink{50%{opacity:.35}}
+.hint{color:var(--muted);font-size:14px;margin:0;text-align:center}
+.spin-btn{border:0;background:var(--cyan);color:#14122b;font-weight:900;font-size:20px;padding:13px 54px;border-radius:999px;box-shadow:0 0 22px var(--cyan);transition:transform .15s}
+.spin-btn:hover{transform:scale(1.04)}
+.spin-btn:active{transform:scale(.96)}
+.spin-btn:disabled{opacity:.6;box-shadow:none;cursor:wait}
+.result{width:100%;max-width:520px;min-height:110px;background:var(--panel);border:2px solid var(--c,#3a3480);border-radius:22px;padding:16px 20px;text-align:center;box-shadow:0 0 24px color-mix(in srgb,var(--c,#3a3480) 45%,transparent);display:flex;flex-direction:column;justify-content:center;gap:8px}
+.result.pop{animation:pop .5s}
+@keyframes pop{0%{transform:scale(.9);opacity:.3}60%{transform:scale(1.04)}100%{transform:scale(1);opacity:1}}
+.chip{align-self:center;font-size:12px;font-weight:800;padding:3px 12px;border-radius:999px;background:var(--c,#3a3480);color:#14122b}
+.result .q{font-size:clamp(19px,5vw,26px);font-weight:800;line-height:1.4;margin:0;overflow-wrap:anywhere}
+.card{background:var(--panel);border:1px solid #3a3480;border-radius:20px;padding:16px;margin-top:16px}
+.card h2{margin:0 0 10px;font-size:15px;color:var(--pink)}
+.hist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.hist li{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--muted)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--c);box-shadow:0 0 8px var(--c)}
+.empty{color:var(--muted);font-size:14px;margin:0}
+.listhead{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:18px}
+.listhead h2{margin:0;font-size:20px;color:var(--cyan);text-shadow:0 0 10px var(--cyan)}
+.count{font-size:13px;color:var(--muted)}
+.sub{color:var(--muted);font-size:14px;margin:4px 0 0}
+.form{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:8px}
+input[type=text]{flex:1;min-width:0;background:var(--bg);border:2px solid #3a3480;border-radius:14px;padding:12px 14px;font-size:16px}
+input[type=text]::placeholder{color:#8780c4}
+input[type=text]:focus{border-color:var(--cyan);outline:none;box-shadow:0 0 12px rgba(61,255,240,.5)}
+.add-btn{border:0;background:var(--pink);color:#14122b;font-weight:900;border-radius:14px;padding:0 18px;box-shadow:0 0 16px var(--pink);white-space:nowrap}
+.cats{display:flex;flex-wrap:wrap;gap:8px}
+.cat{border:2px solid var(--c);background:transparent;color:var(--c);border-radius:999px;padding:6px 12px;font-size:13px;font-weight:800}
+.cat[aria-pressed="true"]{background:var(--c);color:#14122b;box-shadow:0 0 14px var(--c)}
+.msg{min-height:20px;margin:0;font-size:14px;color:var(--lime)}
+.msg.err{color:#ff8a9c}
+.plist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.plist li{display:flex;align-items:center;gap:10px;background:var(--panel2);border-left:5px solid var(--c);border-radius:12px;padding:10px 12px;font-size:15px}
+.plist .t{flex:1;overflow-wrap:anywhere}
+.own{font-size:11px;color:#14122b;background:var(--violet);border-radius:6px;padding:1px 6px;font-weight:800;color:#fff}
+.del{border:0;background:transparent;color:var(--muted);font-size:18px;width:34px;height:34px;border-radius:50%}
+.del:hover{background:#3a3480;color:#fff}
+.reset{margin-top:14px;border:1px solid var(--violet);background:transparent;color:var(--muted);padding:9px 16px;border-radius:999px;font-size:13px}
+.reset:hover{color:#fff;border-color:var(--cyan)}
+footer{text-align:center;color:#8780c4;font-size:12px;margin-top:26px}
+@media (min-width:700px){.app{padding-top:24px}h1{font-size:32px}}
+@media (prefers-reduced-motion:reduce){#wheel{transition-duration:.6s}.bulb,.result.pop{animation:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="brand">
+      <svg class="logo" viewBox="-50 -50 100 100" aria-hidden="true"><circle r="44" fill="#1d1a40" stroke="#ff3df2" stroke-width="4"/><path d="M0 0L0-40A40 40 0 0 1 38-12Z" fill="#ff3df2"/><path d="M0 0L38-12A40 40 0 0 1 23.5 32Z" fill="#3dfff0"/><path d="M0 0L23.5 32A40 40 0 0 1 -23.5 32Z" fill="#b6ff3d"/><path d="M0 0L-23.5 32A40 40 0 0 1 -38-12Z" fill="#ffe83d"/><path d="M0 0L-38-12A40 40 0 0 1 0-40Z" fill="#7a5cff"/><circle r="6" fill="#14122b"/></svg>
+      <div><h1>Neon Spin</h1><p class="tag" data-i18n="tagline"></p></div>
+    </div>
+    <button class="lang" id="langBtn" data-demo="lang-switch" type="button" data-i18n-aria="langAria"><span id="lj">日本語</span> / <span id="le">EN</span></button>
+  </header>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tabSpin" data-demo="tab-spin" data-tab="spin" aria-selected="true" data-i18n="tabSpin"></button>
+    <button class="tab" role="tab" id="tabList" data-demo="tab-list" data-tab="list" aria-selected="false" data-i18n="tabList"></button>
+  </nav>
+
+  <section id="viewSpin">
+    <div class="stage">
+      <div class="wheel-wrap">
+        <svg class="pointer" viewBox="0 0 34 40" aria-hidden="true"><path d="M3 3h28L17 36Z" fill="#fff" stroke="#ff3df2" stroke-width="2" stroke-linejoin="round"/></svg>
+        <button class="wheel-btn" id="wheelBtn" data-demo="wheel" type="button" data-i18n-aria="ariaWheel">
+          <svg id="wheel" viewBox="-50 -50 100 100" aria-hidden="true"></svg>
+        </button>
+        <div class="hub" aria-hidden="true">SPIN</div>
+      </div>
+      <p class="hint" id="hint" data-i18n="hint"></p>
+      <button class="spin-btn" id="spinBtn" data-demo="spin-button" type="button" data-i18n="spin"></button>
+      <div class="result" id="result" data-demo="result" aria-live="polite">
+        <p class="q" id="resultText"></p>
+      </div>
+    </div>
+    <div class="card">
+      <h2 data-i18n="histTitle"></h2>
+      <ul class="hist" id="hist" data-demo="history"></ul>
+    </div>
+  </section>
+
+  <section id="viewList" hidden>
+    <div class="listhead">
+      <h2 data-i18n="listTitle"></h2>
+      <span class="count" id="count" data-demo="count"></span>
+    </div>
+    <p class="sub" data-i18n="listSub"></p>
+    <div class="card form">
+      <div class="row">
+        <input type="text" id="newText" data-demo="new-prompt" maxlength="60" autocomplete="off" data-i18n-ph="addPh" data-i18n-aria="addPh">
+        <button class="add-btn" id="addBtn" data-demo="add-prompt" type="button" data-i18n="addBtn"></button>
+      </div>
+      <div class="cats" id="cats" role="group" data-i18n-aria="catPick"></div>
+      <p class="msg" id="msg" data-demo="message" aria-live="polite"></p>
+    </div>
+    <ul class="plist" id="plist" data-demo="prompt-list" style="margin-top:16px"></ul>
+    <button class="reset" id="resetBtn" data-demo="reset-list" type="button" data-i18n="resetBtn"></button>
+  </section>
+
+  <footer data-i18n="footer"></footer>
+</div>
+
+<script>
+const I18N = {
+  ja: {
+    title:"Neon Spin", tagline:"Spin. Laugh. Repeat.",
+    langAria:"言語を切り替え / Switch language",
+    tabSpin:"🎡 まわす", tabList:"✏️ うちのお題",
+    hint:"円盤をタップ！", spin:"SPIN", spinning:"まわり中…",
+    ariaWheel:"ルーレットをまわす",
+    first:"さあ、まわしてみよう！", histTitle:"さっきまでのお題", histEmpty:"まだ回していません。",
+    listTitle:"うちのお題リスト", listSub:"家族だけの内輪ネタを足そう。ブラウザに保存されます。",
+    count:"{n}件", addPh:"例：パパのものまねをする！", addBtn:"＋ 追加", catPick:"お題の色を選ぶ",
+    added:"追加しました！", errEmpty:"お題を入力してね。", errDup:"同じお題がすでにあります。",
+    deleted:"消しました。", resetBtn:"最初のお題にもどす", resetMsg:"最初のお題にもどしました。",
+    del:"お題を消す", own:"うち", noPrompt:"お題がありません。追加してね！",
+    cat_talk:"話そう", cat_act:"まねっこ", cat_memory:"思い出", cat_wish:"お願い", cat_family:"うちだけ",
+    footer:"お題はこのブラウザにだけ保存されます。"
+  },
+  en: {
+    title:"Neon Spin", tagline:"Spin. Laugh. Repeat.",
+    langAria:"Switch language / 言語を切り替え",
+    tabSpin:"🎡 Spin", tabList:"✏️ Our prompts",
+    hint:"Tap the wheel!", spin:"SPIN", spinning:"Spinning…",
+    ariaWheel:"Spin the wheel",
+    first:"Go on, give it a spin!", histTitle:"Recent prompts", histEmpty:"No spins yet.",
+    listTitle:"Our prompt list", listSub:"Add inside jokes only your family knows. Saved in this browser.",
+    count:"{n} prompts", addPh:"e.g. Imitate Dad!", addBtn:"+ Add", catPick:"Pick a color for the prompt",
+    added:"Added!", errEmpty:"Please type a prompt.", errDup:"That prompt is already in the list.",
+    deleted:"Removed.", resetBtn:"Restore the starter prompts", resetMsg:"Starter prompts restored.",
+    del:"Delete prompt", own:"ours", noPrompt:"No prompts yet. Add one!",
+    cat_talk:"Talk", cat_act:"Act", cat_memory:"Memory", cat_wish:"Wish", cat_family:"Ours",
+    footer:"Your prompts are saved only in this browser."
+  }
+};
+const CATS = [
+  {id:"talk",color:"#ff3df2",icon:"💬"},
+  {id:"act",color:"#3dfff0",icon:"🎭"},
+  {id:"memory",color:"#b6ff3d",icon:"📸"},
+  {id:"wish",color:"#ffe83d",icon:"🙏"},
+  {id:"family",color:"#7a5cff",icon:"🏠"}
+];
+const DEFAULTS = [
+  ["talk","最近いちばん笑った話は？","What's the funniest thing that happened lately?"],
+  ["talk","好きな給食メニューは？","What was your favorite school lunch?"],
+  ["talk","無人島に1つだけ持っていくなら？","If you could bring one thing to a desert island, what?"],
+  ["talk","今いちばん行きたい場所は？","Where do you most want to go right now?"],
+  ["act","好きな動物のものまねをする！","Imitate your favorite animal!"],
+  ["act","10秒で変顔を見せる！","Pull your funniest face for 10 seconds!"],
+  ["act","隣の人のものまねをする！","Imitate the person next to you!"],
+  ["act","好きなアニメの名セリフを言う！","Say a famous line from your favorite show!"],
+  ["memory","子どものころの一番の思い出は？","What's your best childhood memory?"],
+  ["memory","去年いちばん楽しかった日は？","What was the best day last year?"],
+  ["memory","初めて自分で買ったものは？","What was the first thing you bought yourself?"],
+  ["wish","みんなに1つお願いをしてOK！","Ask everyone for one small favor!"],
+  ["wish","肩たたきを30秒してもらう！","Get a 30-second shoulder massage!"],
+  ["wish","次のおやつを選ぶ権利をゲット！","You choose the next snack!"],
+  ["family","おばあちゃんの口ぐせは？","What's Grandma's favorite saying?"],
+  ["family","去年いちばん笑った事件","The funniest incident of last year"],
+  ["family","パパのものまねをする！","Imitate Dad!"],
+  ["family","うちの家族ルールを1つ発表！","Announce one of our family rules!"]
+].map((d,i)=>({id:"d"+i,cat:d[0],ja:d[1],en:d[2]}));
+
+let lang = "en", prompts = [], pickCat = "family", rot = 0, spinning = false, history = [], lastResult = null;
+const $ = id => document.getElementById(id);
+
+function initLang(){
+  let l = null;
+  if (window.APP_LANG === "ja" || window.APP_LANG === "en") l = window.APP_LANG;
+  if (!l){ try{ const q = new URLSearchParams(location.search).get("lang"); if (q==="ja"||q==="en") l=q; }catch(e){} }
+  if (!l){ try{ const s = localStorage.getItem("lang"); if (s==="ja"||s==="en") l=s; }catch(e){} }
+  lang = l || "en";
+}
+function t(k,v){ let s = (I18N[lang][k] ?? I18N.en[k] ?? k); if(v) for(const x in v) s = s.replace("{"+x+"}", v[x]); return s; }
+function ptext(p){ return p.text ? p.text : p[lang]; }
+function catOf(id){ return CATS.find(c=>c.id===id) || CATS[0]; }
+
+function loadPrompts(){
+  try{
+    const raw = localStorage.getItem("neonspin.prompts");
+    if (raw){ const a = JSON.parse(raw); if (Array.isArray(a) && a.length) return a; }
+  }catch(e){}
+  return DEFAULTS.map(d=>({...d}));
+}
+function savePrompts(){ try{ localStorage.setItem("neonspin.prompts", JSON.stringify(prompts)); }catch(e){} }
+
+function buildWheel(){
+  const P = (a,r)=>{ const x=a*Math.PI/180; return [(r*Math.sin(x)).toFixed(2), (-r*Math.cos(x)).toFixed(2)]; };
+  let s = '<circle r="48" fill="#1d1a40" stroke="#ff3df2" stroke-width="2"/>';
+  CATS.forEach((c,i)=>{
+    const a0=i*72,a1=a0+72,p0=P(a0,41),p1=P(a1,41),m=a0+36;
+    s += `<path d="M0 0L${p0[0]} ${p0[1]}A41 41 0 0 1 ${p1[0]} ${p1[1]}Z" fill="${c.color}" stroke="#14122b" stroke-width="1.2"/>`;
+    s += `<text transform="rotate(${m}) translate(0,-27)" text-anchor="middle" dominant-baseline="central" font-size="10">${c.icon}</text>`;
+  });
+  for(let i=0;i<20;i++){
+    const p=P(i*18+9,45);
+    s += `<circle class="bulb" cx="${p[0]}" cy="${p[1]}" r="1.3" fill="${i%2?'#fff':'#ffe83d'}"/>`;
+  }
+  $("wheel").innerHTML = s;
+}
+
+function applyLang(){
+  document.documentElement.lang = lang;
+  document.title = t("title");
+  document.querySelectorAll("[data-i18n]").forEach(e=>e.textContent = t(e.dataset.i18n));
+  document.querySelectorAll("[data-i18n-ph]").forEach(e=>e.placeholder = t(e.dataset.i18nPh));
+  document.querySelectorAll("[data-i18n-aria]").forEach(e=>e.setAttribute("aria-label", t(e.dataset.i18nAria)));
+  const lj=$("lj"), le=$("le");
+  const on = "background:#3dfff0;color:#14122b;border-radius:999px;padding:2px 8px;box-shadow:0 0 10px #3dfff0";
+  lj.style.cssText = lang==="ja"?on:""; le.style.cssText = lang==="en"?on:"";
+  renderCats(); renderList(); renderHistory(); renderResult();
+  $("spinBtn").textContent = spinning ? t("spinning") : t("spin");
+}
+
+function renderCats(){
+  $("cats").innerHTML = "";
+  CATS.forEach(c=>{
+    const b = document.createElement("button");
+    b.type="button"; b.className="cat"; b.style.setProperty("--c",c.color);
+    b.dataset.demo = "cat-"+c.id;
+    b.setAttribute("aria-pressed", String(pickCat===c.id));
+    b.textContent = c.icon+" "+t("cat_"+c.id);
+    b.onclick = ()=>{ pickCat=c.id; renderCats(); };
+    $("cats").appendChild(b);
+  });
+}
+function renderList(){
+  const ul = $("plist"); ul.innerHTML = "";
+  $("count").textContent = t("count",{n:prompts.length});
+  prompts.forEach(p=>{
+    const c = catOf(p.cat), li = document.createElement("li");
+    li.style.setProperty("--c", c.color);
+    const sp = document.createElement("span"); sp.className="t"; sp.textContent = c.icon+" "+ptext(p);
+    li.appendChild(sp);
+    if (p.text){ const o=document.createElement("span"); o.className="own"; o.textContent=t("own"); li.appendChild(o); }
+    const d = document.createElement("button");
+    d.className="del"; d.type="button"; d.textContent="✕"; d.dataset.demo="delete-prompt";
+    d.setAttribute("aria-label", t("del")+": "+ptext(p));
+    d.onclick = ()=>{ prompts = prompts.filter(x=>x!==p); savePrompts(); renderList(); say(t("deleted")); };
+    li.appendChild(d); ul.appendChild(li);
+  });
+}
+function renderHistory(){
+  const ul = $("hist"); ul.innerHTML = "";
+  if (!history.length){ const li=document.createElement("li"); li.className="empty"; li.textContent=t("histEmpty"); ul.appendChild(li); return; }
+  history.forEach(h=>{
+    const li=document.createElement("li"); li.style.setProperty("--c", catOf(h.cat).color);
+    li.innerHTML = '<span class="dot"></span><span></span>';
+    li.lastChild.textContent = h.p ? ptext(h.p) : "";
+    ul.appendChild(li);
+  });
+}
+function renderResult(animate){
+  const r = $("result"), c = lastResult ? catOf(lastResult.cat) : null;
+  r.style.setProperty("--c", c ? c.color : "#3a3480");
+  r.innerHTML = "";
+  if (c){ const ch=document.createElement("span"); ch.className="chip"; ch.textContent=c.icon+" "+t("cat_"+c.id); r.appendChild(ch); }
+  const q = document.createElement("p"); q.className="q";
+  q.textContent = lastResult ? (lastResult.p ? ptext(lastResult.p) : t("noPrompt")) : t("first");
+  r.appendChild(q);
+  if (animate){ r.classList.remove("pop"); void r.offsetWidth; r.classList.add("pop"); }
+}
+function say(text, err){ const m=$("msg"); m.textContent=text; m.className = "msg"+(err?" err":""); }
+
+function spin(){
+  if (spinning) return;
+  spinning = true; $("spinBtn").disabled = true; $("wheelBtn").disabled = true; $("spinBtn").textContent = t("spinning");
+  const idx = Math.floor(Math.random()*CATS.length);
+  const angle = idx*72 + 36 + (Math.random()*44-22);
+  const need = (((-angle - rot) % 360) + 360) % 360;
+  rot = rot + 360*5 + need;
+  $("wheel").style.transform = "rotate("+rot+"deg)";
+  const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setTimeout(()=>{
+    const cat = CATS[idx].id;
+    let pool = prompts.filter(p=>p.cat===cat);
+    if (!pool.length) pool = prompts;
+    const p = pool.length ? pool[Math.floor(Math.random()*pool.length)] : null;
+    lastResult = {cat: p ? p.cat : cat, p};
+    if (p){ history.unshift(lastResult); history = history.slice(0,5); }
+    spinning = false; $("spinBtn").disabled=false; $("wheelBtn").disabled=false; $("spinBtn").textContent=t("spin");
+    renderResult(true); renderHistory();
+  }, reduce ? 700 : 4300);
+}
+
+function addPrompt(){
+  const v = $("newText").value.trim();
+  if (!v){ say(t("errEmpty"), true); return; }
+  if (prompts.some(p=>ptext(p).toLowerCase()===v.toLowerCase())){ say(t("errDup"), true); return; }
+  prompts.unshift({id:"u"+Date.now(), cat:pickCat, text:v});
+  savePrompts(); $("newText").value=""; renderList(); say(t("added"));
+}
+function showTab(name){
+  $("viewSpin").hidden = name!=="spin"; $("viewList").hidden = name!=="list";
+  $("tabSpin").setAttribute("aria-selected", String(name==="spin"));
+  $("tabList").setAttribute("aria-selected", String(name==="list"));
+}
+
+initLang();
+prompts = loadPrompts();
+buildWheel();
+$("wheelBtn").onclick = spin;
+$("spinBtn").onclick = spin;
+$("addBtn").onclick = addPrompt;
+$("newText").addEventListener("keydown", e=>{ if (e.key==="Enter"){ e.preventDefault(); addPrompt(); } });
+$("resetBtn").onclick = ()=>{ prompts = DEFAULTS.map(d=>({...d})); savePrompts(); renderList(); say(t("resetMsg")); };
+document.querySelectorAll(".tab").forEach(b=>b.onclick = ()=>showTab(b.dataset.tab));
+$("langBtn").onclick = ()=>{
+  lang = lang==="ja" ? "en" : "ja";
+  try{ localStorage.setItem("lang", lang); }catch(e){}
+  $("msg").textContent = "";
+  applyLang();
+};
+applyLang();
+</script>
+</body>
+</html>
